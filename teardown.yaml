@@ -1,0 +1,95 @@
+---
+
+- name: Teardown Playbook
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check VMs state
+      virt:
+        name: "{{ inventory_hostname }}"
+        command: list_vms
+        uri: "{{ kvm_addr }}"
+      register: result
+      delegate_to: "{{ kvm_host }}"
+
+    - block:
+      - name: Ensure VM is absent
+        virt:
+          name: "{{ inventory_hostname }}"
+          state: destroyed
+          uri: "{{ kvm_addr }}"
+        delegate_to: "{{ kvm_host }}"
+        throttle: 1
+
+      - name: Ensure VM is undefined
+        virt:
+          name: "{{ inventory_hostname }}"
+          command: undefine
+          uri: "{{ kvm_addr }}"
+        delegate_to: "{{ kvm_host }}"
+        throttle: 1
+      when: inventory_hostname in result.list_vms
+
+    - name: Remove OS disks
+      file:
+        path: "{{os_path}}/{{ inventory_hostname_short }}.qcow2"
+        state: absent
+      delegate_to: "{{ kvm_host }}"
+
+    - name: Remove Cloud init
+      file:
+        path: "{{os_path}}/{{ inventory_hostname_short }}-cloudinit.iso"
+        state: absent
+      delegate_to: "{{ kvm_host }}"
+
+    - name: Remove extra disks
+      file:
+        path: "{{os_path}}/{{ inventory_hostname_short }}-disk{{ item }}.qcow2"
+        state: absent
+      with_sequence: "count={{ extra_disks.count }}"
+      when: extra_disks is defined
+      delegate_to: "{{ kvm_host }}"
+
+    - name: Cleanup tmp directory
+      file:
+        path: /tmp/{{ inventory_hostname_short }}
+        state: absent
+      delegate_to: "{{ kvm_host }}"
+
+    - name: Cleanup tmp xml files
+      file:
+        path: /tmp/{{ inventory_hostname }}.xml
+        state: absent
+      delegate_to: "{{ kvm_host }}"
+
+
+- name: Network removal
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Check Network state
+      virt_net:
+        name: "{{ inventory_hostname }}"
+        command: list_nets
+        uri: "{{ kvm_addr }}"
+      register: netresult
+      delegate_to: "{{ kvm_host }}"
+
+    - name: Stop networks
+      virt_net:
+        command: destroy
+        name: "{{ item.name }}"
+        uri: "{{ kvm_addr }}"
+      loop: "{{ networks }}"
+      when: item.name in netresult.list_nets
+      delegate_to: "{{ kvm_host }}"
+
+    - name: Remove Networks
+      virt_net:
+        command: undefine
+        name: "{{ item.name }}"
+        uri: "{{ kvm_addr }}"
+      loop: "{{ networks }}"
+      when: item.name in netresult.list_nets
+      delegate_to: "{{ kvm_host }}"

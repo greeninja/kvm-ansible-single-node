@@ -1,0 +1,33 @@
+---
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-packages
+  version: main
+  name: packages
+ 
+- src: git+https://github.com/greeninja/ansible-role-kvm-networks
+  version: main
+  name: networks
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-cloud-image
+  version: main
+  name: cloud-image
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-build-os
+  version: main
+  name: build-os
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-build-disks
+  version: main
+  name: build-disks
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-cloud-init
+  version: main
+  name: cloud-init
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-build-vms
+  version: main
+  name: build-vms
+
+- src: git+https://github.com/greeninja/ansible-role-kvm-build-inv
+  version: main
+  name: build-inv

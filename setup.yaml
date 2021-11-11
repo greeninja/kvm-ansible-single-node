@@ -1,0 +1,33 @@
+---
+
+- name: Sample VM build
+  hosts: localhost
+  gather_facts: false
+  become: true
+  roles:
+    - packages
+    - networks
+    - cloud-image
+
+- name: VMs
+  hosts: all
+  gather_facts: false
+  become: true
+  roles:
+    - build-os
+    - build-disks
+    - cloud-init
+    - build-vms
+    - build-inv
+
+- name: Check dynamic inventory works
+  hosts: all
+  gather_facts: false
+  remote_user: root
+  tasks:
+  - name: Install packages
+    package:
+      name: "{{ item }}"
+      state: installed
+    loop:
+      - bind-utils

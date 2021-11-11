@@ -1,0 +1,26 @@
+---
+all:
+  vars:    
+    networks:
+      - name: test
+        subnet: 192.168.33.0/24
+        id: 1010
+        dnsname: test.local
+    kvm_host: localhost
+    remote_cloud_image: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+    os_image: /var/lib/libvirt/images/CentOS-7-x86_64-GenericCloud.qcow2
+    os_path: /var/lib/libvirt/images
+    os_image_size: 40G
+    ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkHWxN2uZZK8in6yY6JnEKgHqkAJ8jysFU3Xuer8UTY"
+  
+
+testing:
+  hosts:
+    test.test.local:
+  vars:
+    interfaces:
+      - network: test
+    memory: 2
+    vcpus: 2
+    ansible_host: "{{ (lookup('file', inventory_dir + '/data.json') | from_json).get(inventory_hostname) }}"
+
